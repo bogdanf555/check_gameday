@@ -1,3 +1,3 @@
-# Check Gameday
+# Check Game-day
 
-Is one utilitary that can notify you weather your favorite football team plays today.
+Is one program that can notify you weather your favorite football team plays today.

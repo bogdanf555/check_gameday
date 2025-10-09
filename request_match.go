@@ -15,7 +15,7 @@ import (
 // curl -H "X-Auth-Token: "Your token here" "https://api.football-data.org/v4/teams/64/matches?season=2025&status=SCHEDULED"
 
 // NOTE : This program now when ran will display the next game liverpool has.
-//       Inhencements to be done:
+//       Improvements to be done:
 //       1.Insert proper checks on the unmarshaled map for the keys to exist
 //       4.Make it a project with multiple files: Football-data fetcher; Notification Sender ; main.go etc.
 //       5.Write some tests
@@ -24,7 +24,7 @@ import (
 
 var (
 	MY_FOOTBALL_DATA_ORG_AUTH_TOKEN string
-	MY_PUSHOVER_RECEPIENT           string
+	MY_PUSHOVER_RECIPIENT           string
 	MY_PUSHOVER_API_TOKEN           string
 )
 
@@ -82,42 +82,42 @@ func FetchNextLiverpoolGame() (Match, error) {
 		panic("couldn't assert the key")
 	}
 
-	for _, match := range matchesSlice {
-		// TODO : instead of looping only to look at the first element extract it from here
-		matchMap := match.(map[string]interface{})
-
-		//TODO : some checks should be done in fact to see if the keys exists in the map
-
-		homeTeam := matchMap["homeTeam"].(map[string]interface{})
-		awayTeam := matchMap["awayTeam"].(map[string]interface{})
-
-		var opponentTeamName string
-		if int(homeTeam["id"].(float64)) != LiverpoolId {
-			opponentTeamName = homeTeam["name"].(string)
-		} else {
-			opponentTeamName = awayTeam["name"].(string)
-		}
-
-		dateTimeUTCString := matchMap["utcDate"].(string)
-
-		matchStartTimeUTC, err := time.Parse(time.RFC3339, dateTimeUTCString)
-
-		if err != nil {
-			panic(err)
-		}
-
-		return Match{opponentTeamName, matchStartTimeUTC.Local()}, nil
+	if len(matchesSlice) < 1 {
+		panic("March results should return at least 1 game!")
 	}
 
-	return Match{}, nil
+	match := matchesSlice[0]
+	matchMap := match.(map[string]interface{})
+
+	//TODO : some checks should be done in fact to see if the keys exists in the map
+
+	homeTeam := matchMap["homeTeam"].(map[string]interface{})
+	awayTeam := matchMap["awayTeam"].(map[string]interface{})
+
+	var opponentTeamName string
+	if int(homeTeam["id"].(float64)) != LiverpoolId {
+		opponentTeamName = homeTeam["name"].(string)
+	} else {
+		opponentTeamName = awayTeam["name"].(string)
+	}
+
+	dateTimeUTCString := matchMap["utcDate"].(string)
+
+	matchStartTimeUTC, err := time.Parse(time.RFC3339, dateTimeUTCString)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return Match{opponentTeamName, matchStartTimeUTC.Local()}, nil
 }
 
 func SendMatchNotificationToPushOver(matchMessage string) error {
 	message := pushover.NewMessageWithTitle(matchMessage, "Liverpool Game Today")
 	app := pushover.New(MY_PUSHOVER_API_TOKEN)
-	recepient := pushover.NewRecipient(MY_PUSHOVER_RECEPIENT)
+	recipient := pushover.NewRecipient(MY_PUSHOVER_RECIPIENT)
 
-	response, err := app.SendMessage(message, recepient)
+	response, err := app.SendMessage(message, recipient)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func LoadEnv() {
 
 	MY_FOOTBALL_DATA_ORG_AUTH_TOKEN = os.Getenv("MY_FOOTBALL_DATA_ORG_AUTH_TOKEN")
 	MY_PUSHOVER_API_TOKEN = os.Getenv("MY_PUSHOVER_API_TOKEN")
-	MY_PUSHOVER_RECEPIENT = os.Getenv("MY_PUSHOVER_RECIPIENT")
+	MY_PUSHOVER_RECIPIENT = os.Getenv("MY_PUSHOVER_RECIPIENT")
 
 	fmt.Println("Loaded env vars")
 }
