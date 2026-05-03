@@ -1,2 +1,3 @@
 .env
 check_gameday
+cron.log
